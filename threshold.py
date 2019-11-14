@@ -37,7 +37,7 @@ def update(X, node, node_visit_status, tent_dist):
 
 
 def algo(X, initial, target, node_visit_status, tent_dist):
-    print("Starting algorithm" + "#"*20)
+    print('Starting algorithm' + '#'*20)
     next_node = initial 
     while next_node != target:
         update(X, next_node, node_visit_status, tent_dist)
@@ -70,29 +70,74 @@ def path(tent_dist, initial, target):
     return path_nodes
 
 
+def parse_args():
+    flags = {
+            'plots': False,
+            'display': False,
+            }
+    
+    n_args = len(sys.argv)
+    if n_args < 2:
+        return flags
+
+    for arg in sys.argv:
+        if arg == 'threshold.py':
+            continue
+        else:
+            if arg not in flags.keys():
+                print('Error: argument \'' + arg + '\' is invalid!')
+                print('Possible arguments are: ', list(flags.keys()))
+                return {}
+
+            flags[arg] = True
+    
+    if flags['display'] and not flags['plots']:
+        print('Warning: argument \'display\' can not be used without argument \'plots\'!')
+        flags['plots'] = True
+
+    return flags
+
+
 def main():
-    data_root_dir = 'datasets/'
-    data_dir = 'Volvo_burner_OH/'
-    if not os.path.isdir(data_root_dir + data_dir):
-        print("Data directory " + data_root_dir + data_dir + " doesn't exist!")
+    flags = parse_args()
+    if not flags:
         return
 
-    fnames = [data_root_dir + data_dir + 'OH' + str(i+1) for i in range(100)]
+    data_root_dir = 'datasets/'
+    if not os.path.isdir(data_root_dir):
+        print('Data directory ' + data_root_dir + ' doesn\'t exist!')
+        return
+    
+    data_dir = data_root_dir + 'Volvo_burner_OH/'
+    if not os.path.isdir(data_dir):
+        print('Data directory ' + data_dir + ' doesn\'t exist!')
+        return
+    
+    edge_dir = data_root_dir + 'Volvo_burner_OH_edges/'
+    if not os.path.isdir(edge_dir):
+        print('Edge directory ' + edge_dir + ' doesn\'t exist!')
+        return
 
-    if not os.path.isdir('pictures/'):
-        print("Creating pictures/ directory to save plots...")
-        os.mkdir('pictures/')
+    if flags['plots']:
         if not os.path.isdir('pictures/'):
-            print("Failed to create pictures/ directory!")
+            print('Creating pictures/ directory to save plots...')
+            os.mkdir('pictures/')
+            if not os.path.isdir('pictures/'):
+                print('Failed to create pictures/ directory!')
+                return
+
+        picnames = ['pictures/OH0000' + str(i+1) for i in range(9)]
+        picnames = picnames + ['pictures/OH000' + str(i+10) for i in range(90)]
+        picnames = picnames + ['pictures/OH00' + str(i+100) for i in range(900)]
+
+    for index in range(1,1000):
+        fdata = data_dir + 'OH' + str(index) + '.dat'
+        if not os.path.exists(fdata):
+            print('No file with name: ' + fdata)
             return
-
-    picnames = ['pictures/OH0000' + str(i+1) for i in range(9)]
-    picnames = picnames + ['pictures/OH000' + str(i+10) for i in range(90)]
-    pic = 0
-    for fname in fnames:
-        print("Opening file: {}".format(fname))
-
-        raw_img = np.loadtxt(fname+'.dat') # Retrieve data
+        
+        print('Opening file: {}'.format(fdata))
+        raw_img = np.loadtxt(fdata) # Retrieve data
         
         #Sobel filter
         dx = ndimage.sobel(raw_img,0)
@@ -101,7 +146,6 @@ def main():
         f = plt.figure(1)
         plt.clf()
 
-        
         #Threshold
         edge_i = []
         edge_j = []
@@ -111,17 +155,26 @@ def main():
                     edge_i.append(i)
                     edge_j.append(j)
         
-        plt.subplot(2,2,1), plt.imshow(raw_img, cmap = 'jet')
-        plt.subplot(2,2,2), plt.imshow(mag, cmap = 'jet')
-        plt.subplot(2,2,3), plt.imshow(mag, cmap = 'jet')
-        plt.subplot(2,2,3), plt.scatter(edge_j, edge_i, facecolors ='none', edgecolor='k')
-        plt.subplot(2,2,4), plt.imshow(raw_img, cmap = 'jet')
-        plt.subplot(2,2,4), plt.scatter(edge_j, edge_i, facecolors='none', edgecolor='k')
-        f.savefig(picnames[pic]+'.png', bbox_inches='tight')
-        plt.show()
+        fedge = edge_dir + 'OH_edge' + str(index) + '.dat'
+        with open(fedge, 'w') as fe:
+            for i in range(len(edge_i)):
+                fe.write("{} \t {}\n".format(edge_i[i], edge_j[i]))
 
+        if flags['plots']:
+            plt.subplot(2,2,1), plt.imshow(raw_img, cmap = 'jet')
+            plt.gca().set_title('Raw data')
+            plt.subplot(2,2,2), plt.imshow(mag, cmap = 'jet')
+            plt.gca().set_title('Sobel filtered')
+            plt.subplot(2,2,3), plt.imshow(mag, cmap = 'jet')
+            plt.subplot(2,2,3), plt.scatter(edge_j, edge_i, facecolors ='none', edgecolor='k')
+            plt.gca().set_title('Threshold on Sobel')
+            plt.subplot(2,2,4), plt.imshow(raw_img, cmap = 'jet')
+            plt.subplot(2,2,4), plt.scatter(edge_j, edge_i, facecolors='none', edgecolor='k')
+            plt.gca().set_title('Detected edge')
+            f.savefig(picnames[index-1]+'.png', bbox_inches='tight')
+            
+            if flags['display']:
+                plt.show()
 
-        pic += 1
-
-if __name__ == "__main__":
+if __name__ == '__main__':
     main()
