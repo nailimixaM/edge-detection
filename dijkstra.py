@@ -2,7 +2,7 @@
 # Dijkstra algorithm implementation to find the
 # quickest path through a matrix (with strictly
 # non-negative entries). 
-#
+# 
 # Arguments: none
 #
 # Author:   Max Croci
