@@ -53,12 +53,13 @@ def main():
         print('Data directory ' + data_root_dir + ' doesn\'t exist!')
         return
     
-    data_dir = data_root_dir + 'Volvo_burner_OH/'
+    data_dir = data_root_dir + 'OH_double_cycle/'
+    #data_dir = data_root_dir + 'Volvo_burner_OH/'
     if not os.path.isdir(data_dir):
         print('Data directory ' + data_dir + ' doesn\'t exist!')
         return
     
-    edge_dir = data_root_dir + 'Volvo_burner_OH_edges/'
+    edge_dir = data_root_dir + 'OH_double_cycle_edges/'
     if not os.path.isdir(edge_dir):
         print('Edge directory ' + edge_dir + ' doesn\'t exist!')
         return
@@ -77,7 +78,8 @@ def main():
     
 
     #Thresholding algorithm
-    for index in range(1,1000):
+    n_pic = 0
+    for index in range(2200,2401):
         fdata = data_dir + 'OH' + str(index) + '.dat'
         if not os.path.exists(fdata):
             print('No file with name: ' + fdata)
@@ -107,7 +109,7 @@ def main():
         with open(fedge, 'w') as fe:
             for i in range(len(edge_i)):
                 fe.write("{} \t {}\n".format(edge_i[i], edge_j[i]))
-
+        
         if flags['plots']:
             plt.subplot(2,2,1), plt.imshow(raw_img, cmap = 'jet')
             plt.gca().set_title('Raw data')
@@ -119,8 +121,9 @@ def main():
             plt.subplot(2,2,4), plt.imshow(raw_img, cmap = 'jet')
             plt.subplot(2,2,4), plt.scatter(edge_j, edge_i, facecolors='none', edgecolor='k')
             plt.gca().set_title('Detected edge')
-            f.savefig(picnames[index-1]+'.png', bbox_inches='tight')
-            
+            f.savefig(picnames[n_pic]+'.png', bbox_inches='tight')
+            n_pic += 1
+
             if flags['display']:
                 plt.show()
 
